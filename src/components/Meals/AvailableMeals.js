@@ -10,12 +10,16 @@ const FIREBASE_MEAL_URL =
 // No need for props either
 const AvailableMeals = () => {
   const [meals, setMeals] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchMealsHandler = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       const response = await fetch(FIREBASE_MEAL_URL);
       if (!response.ok) {
-        throw new Error("Unable to get Meals as this time");
+        throw new Error("Unable to get meals as this time");
       }
       const data = await response.json();
       const loadedMeals = [];
@@ -30,15 +34,26 @@ const AvailableMeals = () => {
       console.log(loadedMeals);
 
       setMeals(loadedMeals);
+      setIsLoading(false);
     } catch (error) {
       console.log(error);
+      setIsLoading(false);
+      setError(error.message);
     }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
     fetchMealsHandler();
   }, [fetchMealsHandler]);
 
+  let content = <p>Found no meals</p>;
+  if (error) {
+    content = <p className={classes.MealsError}>{error}</p>;
+  }
+  if (isLoading) {
+    content = <p className={classes.MealsLoading}>Loading meals...</p>;
+  }
   const mealsList = meals.map((meal) => (
     <MealItem
       id={meal.id}
@@ -48,12 +63,13 @@ const AvailableMeals = () => {
       price={meal.price}
     />
   ));
+  if (meals.length > 0) {
+    content = <ul>{mealsList}</ul>;
+  }
 
   return (
     <section className={classes.meals}>
-      <Card>
-        <ul>{mealsList}</ul>
-      </Card>
+      <Card>{content}</Card>
     </section>
   );
 };
