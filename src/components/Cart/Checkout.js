@@ -47,9 +47,18 @@ const Checkout = (props) => {
     if (!formIsValid) {
       return;
     }
+
+    props.onConfirm({
+      name: enteredName,
+      street: enteredStreet,
+      city: enteredCity,
+      postalCode: enteredPostalCode,
+    });
   };
 
   // for creating a form custom hook later
+  // add a touched state
+
   const nameControlClasses = `${classes.control} ${
     formInputsValidity.name ? "" : classes.invalid
   }`;
