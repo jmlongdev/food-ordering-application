@@ -13,6 +13,7 @@ const Cart = (props) => {
   const [isCheckout, setIsCheckout] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [didSubmit, setDidSubmit] = useState(false);
+  const [error, setError] = useState(null);
   const cartCtx = useContext(CartContext);
 
   const totalAmount = `$${cartCtx.totalAmount.toFixed(2)}`;
@@ -29,18 +30,28 @@ const Cart = (props) => {
     setIsCheckout(true);
   };
 
-  // add error handling try/catch
+  // add error handling try/catch ... research for POST request
   const submitOrderHandler = async (userData) => {
     setIsSubmitting(true);
-    const response = await fetch(FIREBASE_ORDERS_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        user: userData,
-        orderedItems: cartCtx.items,
-      }),
-    });
+    try {
+      const response = await fetch(FIREBASE_ORDERS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          user: userData,
+          orderedItems: cartCtx.items,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Something went Wrong");
+      }
+    } catch (error) {
+      setError(error);
+      setIsSubmitting(false);
+      setDidSubmit(false);
+    }
     setIsSubmitting(false);
     setDidSubmit(true);
+    cartCtx.clearCart();
   };
 
   const cartItems = (
@@ -85,7 +96,16 @@ const Cart = (props) => {
     </React.Fragment>
   );
   const isSubmittingModalContent = <p>Sending order data</p>;
-  const didSubmitModalContent = <p>Succesfully sent the order!</p>;
+  const didSubmitModalContent = (
+    <React.Fragment>
+      <p>Succesfully sent the order!</p>
+      <div className={classes.actions}>
+        <button className={classes.button} onClick={props.onClose}>
+          Close
+        </button>
+      </div>
+    </React.Fragment>
+  );
 
   return (
     <Modal onClose={props.onClose}>
